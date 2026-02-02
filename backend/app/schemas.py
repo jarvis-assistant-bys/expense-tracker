@@ -14,14 +14,14 @@ class ExpenseCategory(str, Enum):
     AUTRE = "autre"
 
 class ExpenseBase(BaseModel):
-    date: Optional[date] = None
-    description: Optional[str] = None
-    amount_ht: Optional[float] = None
-    tva: Optional[float] = None
-    amount_ttc: Optional[float] = None
-    tva_rate: Optional[float] = None
-    category: Optional[ExpenseCategory] = ExpenseCategory.AUTRE
-    vendor: Optional[str] = None
+    date: date | None = None
+    description: str | None = None
+    amount_ht: float | None = None
+    tva: float | None = None
+    amount_ttc: float | None = None
+    tva_rate: float | None = None
+    category: ExpenseCategory | None = ExpenseCategory.AUTRE
+    vendor: str | None = None
 
 class ExpenseCreate(ExpenseBase):
     pass
