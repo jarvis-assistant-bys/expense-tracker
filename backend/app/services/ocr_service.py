@@ -47,6 +47,16 @@ class OCRService:
     # Taux de TVA français valides
     VALID_VAT_RATES = [5.5, 10.0, 20.0]
     
+    # Pattern compilé pour les lignes TVA (performance)
+    _VAT_LINE_PATTERN = re.compile(
+        r'TVA\s*(\d+[,\.]?\d*)\s*%\s+(\d+[,\.]\d{2})\s+(\d+[,\.]\d{2})',
+        re.IGNORECASE
+    )
+    _VAT_ALT_PATTERN = re.compile(
+        r'TVA\s*(\d+[,\.]?\d*)\s*%[:\s]*(\d+[,\.]\d{2})',
+        re.IGNORECASE
+    )
+    
     def __init__(self, lang: str = "fra+eng"):
         self.lang = lang
     
@@ -142,16 +152,14 @@ class OCRService:
         - "T.V.A. 5,5% : 1,23€"
         
         Returns:
-            Liste de VATLine avec rate, amount_ht, amount_vat
+            Liste de VATLine avec rate, amount_ht, amount_vat.
+            Liste vide si aucun pattern détecté (fallback mono-TVA).
         """
         vat_lines = []
         
-        # Pattern principal: capture taux + montants sur la même ligne
+        # Pattern principal (compilé): capture taux + montants sur la même ligne
         # Exemple: "TVA 10 %    31,82    3,18    35,00"
-        #          "TVA 20 %    11,67    2,33    14,00"
-        main_pattern = r'TVA\s*(\d+[,\.]?\d*)\s*%\s+(\d+[,\.]\d{2})\s+(\d+[,\.]\d{2})'
-        
-        for match in re.finditer(main_pattern, text, re.IGNORECASE):
+        for match in self._VAT_LINE_PATTERN.finditer(text):
             rate = self._parse_float(match.group(1))
             amount_ht = self._parse_float(match.group(2))
             amount_vat = self._parse_float(match.group(3))
@@ -165,10 +173,8 @@ class OCRService:
         
         # Si pas de match avec le pattern principal, essayer des patterns alternatifs
         if not vat_lines:
-            # Pattern alternatif: "TVA X% : Y,YY€" (montant TVA seul)
-            alt_pattern = r'TVA\s*(\d+[,\.]?\d*)\s*%[:\s]*(\d+[,\.]\d{2})'
-            
-            for match in re.finditer(alt_pattern, text, re.IGNORECASE):
+            # Pattern alternatif (compilé): "TVA X% : Y,YY€" (montant TVA seul)
+            for match in self._VAT_ALT_PATTERN.finditer(text):
                 rate = self._parse_float(match.group(1))
                 amount_vat = self._parse_float(match.group(2))
                 
