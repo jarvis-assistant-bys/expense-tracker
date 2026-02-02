@@ -1,5 +1,5 @@
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageOps
 from pdf2image import convert_from_path
 from pathlib import Path
 import re
@@ -25,6 +25,11 @@ class OCRService:
     def extract_text_from_image(self, image_path: Path) -> str:
         """Extrait le texte d'une image."""
         image = Image.open(image_path)
+        # Auto-orientation basée sur les métadonnées EXIF
+        image = ImageOps.exif_transpose(image)
+        # Convertir en RGB si nécessaire (pour les images RGBA ou P)
+        if image.mode not in ('L', 'RGB'):
+            image = image.convert('RGB')
         text = pytesseract.image_to_string(image, lang=self.lang)
         return text
     
