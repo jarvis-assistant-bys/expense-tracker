@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import date
+import datetime
 from typing import Optional
 from enum import Enum
 
@@ -14,7 +14,7 @@ class ExpenseCategory(str, Enum):
     AUTRE = "autre"
 
 class ExpenseBase(BaseModel):
-    date: date | None = None
+    date: datetime.date | None = None
     description: str | None = None
     amount_ht: float | None = None
     tva: float | None = None
